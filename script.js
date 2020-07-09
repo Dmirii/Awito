@@ -13,63 +13,67 @@ const modalBtnWarning =document.querySelector('.modal__btn-warning')
 const elementModalSubmit = [...modalSubmit.elements].filter(elem => elem.tagName !=='BUTTON' && elem.tagName !=='submit');
 
 
+// close modal window
+
+const closeModal = function(event) {
+    const target = event.target;
+    if(target.closest('.modal__close') || target === this ) {
+        this.classList.add('hide');
+        if (this === modalAdd) {
+            modalSubmit.reset();
+        }
+    }else if(event.code === 'Escape'){
+        modalIitem.classList.add('hide');
+        modalAdd.classList.add('hide');
+        document.removeEventListener('keydown', closeModal);
+    }
+    console.log(event.code);
+
+};
+
+// open Add announcement window
+
 addAdd.addEventListener('click', () => {
     modalAdd.classList.remove('hide');
     modalBtnSubmit.disabled = true;
+    document.addEventListener('keydown', closeModal);
 
 });
 
-modalAdd.addEventListener('click', event => {
-    const target = event.target;
-    
-    
-    if (target.classList.contains('modal__close') ||
-        target === modalAdd){
-        modalAdd.classList.add('hide');
-        modalSubmit.reset();
-    }
-});
-
+// open catalog window
 catalog.addEventListener('click', event => {
     const target = event.target;
+
     if(target.closest('.card')){
         modalIitem.classList.remove('hide');
+        document.addEventListener('keydown', closeModal);
     }   
+
 });
 
-modalIitem.addEventListener('click', event => {
-    const target = event.target;   
-    
-    if (target.classList.contains('modal__close') ||
-        target === modalIitem){
-        modalIitem.classList.add('hide');
-     
-    }
-});
+// close modal window
+modalAdd.addEventListener('click', closeModal);
+modalIitem.addEventListener('click',closeModal);
+//catalog.addEventListener('click', closeModal );
 
 
-body.addEventListener('keydown', event => {
-   if (event.keyCode === 27 ){
-         modalIitem.classList.add('hide');
-         modalAdd.classList.add('hide');
-   }
-});
 
+// validation of 'Add announcement form' elements
 modalSubmit.addEventListener('input', () => {
-    const validForm = elementModalSubmit.every(elem => elem.value);
+    const validForm = elementModalSubmit.every(elem => elem.value); // if any of fills is empty ,we get false
     modalBtnSubmit.disabled = !validForm;
     modalBtnWarning.style.display = validForm ? 'none' : '';
-
 });
 
+// event submit of 'Add announcement form' 
 modalSubmit.addEventListener('submit', event => {
-    event.preventDefault();
+    event.preventDefault(); // turn off default browser behavior
    
-    const obj = {};
+    const obj = {};// temp object for my dataBase
     for (const elem of elementModalSubmit){
         obj[elem.name] = elem.value;
     }
-    dB.push(obj);
+    dB.push(obj);//add eleement to dataBase
     modalSubmit.reset();
     modalAdd.classList.add('hide');
 
