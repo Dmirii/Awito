@@ -16,14 +16,18 @@ const modalImageAdd = document.querySelector('.modal__image-add');
 ///// modalItem elem
 const modalHeaderItem =document.querySelector('.modal__header-item');
 const modalStatusItem =document.querySelector('.modal__status-item');
-const modalDescriptionItem = document.querySelector('.modal__description-item')
+const modalDescriptionItem = document.querySelector('.modal__description-item');
 const modalCostItem = document.querySelector('.modal__cost-item');
-const modalImageItem = document.querySelector('.modal__image-item')
+const modalImageItem = document.querySelector('.modal__image-item');
+///// search
+const searchInput = document.querySelector('.search__input');
+const menuContainer = document.querySelector('.menu__container');
 
 ///// temp var
 const textFileBtn = modalFileBtn.textContent;
 const srcModalImg = modalImageAdd.src;
 const infoPhoto = {};
+  let idCounter=dB.length;
 
 // save data to localStorage
 const saveDb = () => localStorage.setItem('awito',JSON.stringify(dB));
@@ -58,11 +62,11 @@ const closeModal = function(event) {
 };
 
 //
-const renderCard = () => {
+const renderCard = (dataBase) => {
     catalog.textContent='';
-    dB.forEach((element, index) => {
+    dataBase.forEach((element, index) => {
         catalog.insertAdjacentHTML('beforeend', `
-                <li class="card" data-id="${index}">
+                <li class="card" data-id-item="${element.id}">
                     <img class="card__image" src="data:image/jpeg;base64,${element.image}" alt="test">
                     <div class="card__description">
                         <h3 class="card__header">${element.nameItem}</h3>
@@ -75,6 +79,25 @@ const renderCard = () => {
 
 };
 
+// search input event
+searchInput.addEventListener('input', () => {
+    // cut spaces 
+    searchInput.value = searchInput.value.trim().toLowerCase();
+    const searchValue = searchInput.value;
+
+    
+    if(searchValue.length > 2){
+        const result = dB.filter(item => item.nameItem.toLowerCase().includes(searchValue)
+                        ||item.descriptionItem.toLowerCase().includes(searchValue));        
+        if(result.length>0){
+            renderCard(result);
+        }
+    }
+   
+
+
+});
+
 
 // open Add announcement window
 $addAdd.addEventListener('click', () => {
@@ -86,18 +109,29 @@ $addAdd.addEventListener('click', () => {
 // open catalog window
 catalog.addEventListener('click', event => {
     const target = event.target;
+    const card =target.closest('.card');
 
-    if(target.closest('.card')){
+    if(card){        
+        //console.dir(card);
+        // render modalItem
+        // get atribute
+        // const index =card.getAttribute('data-id-item'); // first way to get date
+        // modalHeaderItem.innerText= dB[index].nameItem;  
+     
+        const dBItem = dB.find(obj =>  obj.id === +card.dataset.idItem); //second way 
+        console.log('dB:',dB)
+        console.log('counter:',card.dataset.idItem)    
+        console.log('dBItem:',dBItem)   
+        
+        // set modal value
+        modalHeaderItem.innerText= dBItem.nameItem;        
+        modalStatusItem.innerText = dBItem.status === 'old' ? 'Б/У' : 'новый';
+        modalDescriptionItem.innerText = dBItem.descriptionItem;
+        modalCostItem.innerText = dBItem.costItem;
+        modalImageItem.src= `data:image/jpeg;base64,${dBItem.image}`
+
         modalIitem.classList.remove('hide');
         document.addEventListener('keydown', closeModal);
-
-        // render modalItem
-        const index =target.closest('.card').getAttribute('data-id');  
-        modalHeaderItem.innerText= dB[index].nameItem;        
-        modalStatusItem.innerText = dB[index].status === 'old' ? 'Б/У' : 'новый';
-        modalDescriptionItem.innerText = dB[index].descriptionItem;
-        modalCostItem.innerText = dB[index].costItem;
-        modalImageItem.src= `data:image/jpeg;base64,${dB[index].image}`
     } 
 });
 
@@ -113,16 +147,17 @@ modalSubmit.addEventListener('submit', event => {
     event.preventDefault(); // turn off default browser behavior
    
     const obj = {};// temp object for my dataBase
+    
     for (const elem of elementModalSubmit){
-        obj[elem.name] = elem.value;
+        obj[elem.name] = elem.value;       
     }
-
+    obj.id = idCounter++; // inc global counter
     obj.image = infoPhoto.base64;
     dB.push(obj);//add eleement to dataBase
     closeModal({target: $modalAdd}); // ?
     console.log({target: $modalAdd});
     saveDb();  
-    renderCard();  
+    renderCard(dB);  
 
 });
 
@@ -155,6 +190,19 @@ modalFileInput.addEventListener('change', event =>{
 
 });
 
+menuContainer.addEventListener('click', () => {
+    const target = event.target ;
+    if(target.tagName === 'A') {
+        const result =dB.filter(item => item.category === target.dataset.category);
+        console.log(result.length);
 
-// rebder Catalog 
-renderCard();
+        if(result.length>0){
+            renderCard(result);
+        }
+    }
+
+
+});
+
+// render Catalog 
+renderCard(dB);
